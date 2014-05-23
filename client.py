@@ -2,11 +2,20 @@ __author__ = 'floatec'
 #Socket client example in python
 
 from Crypto import Random
+from Crypto.PublicKey import RSA
 import socket  # for sockets
 import sys  # for exit
 import hashlib
 import base64
 import AESCipher
+import rsa
+
+try:
+    with open('id_rsa.pub', 'r') as key_file:
+        keyString = key_file.read()
+        server_key = RSA.importKey(keyString)
+except IOError:
+    print 'Unable to open key file!'
 
 #create an INET, STREAMing socket
 try:

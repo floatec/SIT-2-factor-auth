@@ -35,8 +35,8 @@ def clientthread(conn):
         #Receiving from client
         data = conn.recv(1024)
         key = data
-        aes=AESCipher.AESCipher(key)
-        cyphertext=aes.encrypt("hallo")
+        aes = AESCipher.AESCipher(key)
+        cyphertext = aes.encrypt("hallo")
 
         if not data:
             break
