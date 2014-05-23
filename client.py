@@ -1,8 +1,13 @@
 __author__ = 'floatec'
 #Socket client example in python
 
+from Crypto import Random
 import socket  # for sockets
 import sys  # for exit
+import hashlib
+import base64
+import AESCipher
+
 
 #create an INET, STREAMing socket
 try:
@@ -14,7 +19,7 @@ except socket.error:
 print 'Socket Created'
 
 host = 'localhost'
-port = 8888
+port = 8889
 
 try:
     remote_ip = socket.gethostbyname(host)
@@ -23,14 +28,14 @@ except socket.gaierror:
     #could not resolve
     print 'Hostname could not be resolved. Exiting'
     sys.exit()
-
+key = hashlib.sha256("notsosecure").digest()
+aes=AESCipher.AESCipher(key)
 #Connect to remote server
 s.connect((remote_ip, port))
 
-print 'Socket Connected to ' + host + ' on ip ' + remote_ip
 
-#Send some data to remote server
-message = "hallo\n"
+
+message = key
 
 try :
     #Set the whole string
@@ -40,9 +45,10 @@ except socket.error:
     print 'Send failed'
     sys.exit()
 
-print 'Message send successfully'
 
 #Now receive data
-reply = s.recv(4096)
+cipher = s.recv(4096)
+print(cipher)
+reply = aes.decrypt(cipher)
 
 print reply
