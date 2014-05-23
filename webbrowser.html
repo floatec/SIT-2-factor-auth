@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Two Factor Authentication</title>
+
+    <script type="text/javascript" src="/javascript/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="/javascript/sha1-min.js"></script>
+    <script type="text/javascript">
+        sendCrud()
+        {
+            var username = $(#usrName).text;
+            var hash = CryptoJS.SHA1($(#pwd).text+$(#authentificationNumber).text);
+ $.ajax({
+  //The URL to process the request
+    'url' : 'page.php',
+  //The type of request, also known as the "method" in HTML forms
+  //Can be 'GET' or 'POST'
+    'type' : 'GET',
+  //Any post-data/get-data parameters
+  //This is optional
+    'data' : {
+      'paramater1' : 'username',
+      'parameter2' : 'hash'
+    },
+  //The response from the server
+    'success' : function(data) {
+    //You can use any jQuery/JavaScript here!!!
+      if (data == "success") {
+        alert('request sent!');
+      }
+    }
+  });
+
+        }
+
+
+
+    </script>
+</head>
+
+<body>
+
+<input type="text" id="usrName">
+<input type="password" id="pwd">
+<input type="text" id="authentificationNumber">
+<input type="button" id="send" onclick="sendCrud()">
+
+</body>
+
+</html>
