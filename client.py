@@ -1,8 +1,8 @@
 __author__ = 'floatec'
 #Socket client example in python
 
-import socket   #for sockets
-import sys  #for exit
+import socket  # for sockets
+import sys  # for exit
 
 #create an INET, STREAMing socket
 try:
@@ -13,11 +13,11 @@ except socket.error:
 
 print 'Socket Created'
 
-host = 'localhost';
-port = 8888;
+host = 'localhost'
+port = 8888
 
 try:
-    remote_ip = socket.gethostbyname( host )
+    remote_ip = socket.gethostbyname(host)
 
 except socket.gaierror:
     #could not resolve
@@ -25,7 +25,7 @@ except socket.gaierror:
     sys.exit()
 
 #Connect to remote server
-s.connect((remote_ip , port))
+s.connect((remote_ip, port))
 
 print 'Socket Connected to ' + host + ' on ip ' + remote_ip
 
