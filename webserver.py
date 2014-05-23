@@ -21,21 +21,8 @@ class MyHandler(BaseHTTPRequestHandler):
             self.send_error(404,'File Not Found: %s' % self.path)
 
     def do_Post(self):
-        global rootnode
-        try:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('contet-type'))
-            if ctype == 'multipart/form-data':
-                query=cgi.parse_multipart(self.rfile,pdict)
-            self.send_response(301)
+        pass
 
-            self.end_headers()
-            upfilecontent = query.get('upfile')
-            print "filecontent", upfilecontet[0]
-            self.wfile.write("<HTML>POST OK.<BR><BR>");
-            self.wfile.write(upfilecontet[0]);
-
-        except:
-            pass
 
 def main():
     try:
