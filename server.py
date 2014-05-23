@@ -3,9 +3,11 @@ import socket
 import sys
 from thread import *
 import AESCipher
+import uuid
+import hashlib
 
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 8889  # Arbitrary non-privileged port
+PORT = 8888  # Arbitrary non-privileged port
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket created'
@@ -36,13 +38,29 @@ def clientthread(conn):
         data = conn.recv(1024)
         key = data
         aes = AESCipher.AESCipher(key)
-        cyphertext = aes.encrypt("hallo")
+
+        user = aes.decrypt(conn.recv(1024))
+        pwd = aes.decrypt(conn.recv(1024))
+        print user
+        #antwort
+        chalange = str(uuid.uuid4())
+        cyphertext = aes.encrypt(chalange)
+
 
         if not data:
             break
 
         conn.send(cyphertext)
+        data = aes.decrypt(conn.recv(1024))
+        if data == hashlib.sha1(chalange+user).digest():
+            temp_pwd = aes.decrypt(conn.recv(1024))
+            temp_rand = hashlib.md5(str(uuid.uuid4())).digest()
+            #TODO add database parts here
+            conn.send(aes.encrypt(temp_rand))
 
+            print("fuck")
+        else:
+             conn.send(aes.encrypt("__ERROR"))
     #came out of loop
     conn.close()
 
