@@ -2,7 +2,6 @@ __author__ = 'floatec'
 import socket
 import sys
 from thread import *
-import base64
 import AESCipher
 import uuid
 import hashlib
@@ -39,12 +38,16 @@ def clientthread(conn):
         data = conn.recv(1024)
         key = data
         aes = AESCipher.AESCipher(key)
+<<<<<<< HEAD
         user = aes.decrypt(conn.recv(1024))
         pwd = aes.decrypt(conn.recv(1024))
         print user
         #antwort
         chalange = str(uuid.uuid4())
         cyphertext = aes.encrypt(chalange)
+=======
+        cyphertext = aes.encrypt("hallo")
+>>>>>>> 4ababa0ae602ae6585b8cc592aaacaa24c2ae343
 
         if not data:
             break
