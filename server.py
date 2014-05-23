@@ -4,6 +4,8 @@ import sys
 from thread import *
 import base64
 import AESCipher
+import uuid
+import hashlib
 
 HOST = ''   # Symbolic name meaning all available interfaces
 PORT = 8889  # Arbitrary non-privileged port
@@ -36,14 +38,28 @@ def clientthread(conn):
         #Receiving from client
         data = conn.recv(1024)
         key = data
-        aes=AESCipher.AESCipher(key)
-        cyphertext=aes.encrypt("hallo")
+        aes = AESCipher.AESCipher(key)
+        user = aes.decrypt(conn.recv(1024))
+        pwd = aes.decrypt(conn.recv(1024))
+        print user
+        #antwort
+        chalange = str(uuid.uuid4())
+        cyphertext = aes.encrypt(chalange)
 
         if not data:
             break
 
         conn.send(cyphertext)
+        data = aes.decrypt(conn.recv(1024))
+        if data == hashlib.sha1(chalange+user).digest():
+            temp_pwd = aes.decrypt(conn.recv(1024))
+            temp_rand = hashlib.md5(str(uuid.uuid4())).digest()
+            #TODO add database parts here
+            conn.send(aes.encrypt(temp_rand))
 
+            print("fuck")
+        else:
+             conn.send(aes.encrypt("__ERROR"))
     #came out of loop
     conn.close()
 
