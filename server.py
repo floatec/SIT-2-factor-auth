@@ -10,10 +10,11 @@ from Crypto.PublicKey import RSA
 
 class ServerInstance:
 
-    def __init__(self):
+    def __init__(self, server):
         self.username = ""
         self.pwd = ""
         self.session_key = ""
+        self.server = server
 
     #Function for handling connections. This will be used to create threads
     def client_thread(self, conn):
@@ -21,33 +22,30 @@ class ServerInstance:
         #conn.send('Welcome to the server. Type something and hit enter\n')  # send only takes string
 
         #infinite loop so that function do not terminate and thread do not end.
-        while True:
 
-            #Receiving from client
-            data = conn.recv(1024)
-            self.session_key = AESCipher.AESCipher(data)
 
-            self.username = self.session_key.decrypt(conn.recv(1024))
-            self.pwd = self.session_key.decrypt(conn.recv(1024))
+        #Receiving from client
+        data = server.private.decrypt(conn.recv(2048))
+        self.session_key = AESCipher.AESCipher(data)
+        self.username = self.session_key.decrypt(conn.recv(1024))
+        self.pwd = self.session_key.decrypt(conn.recv(1024))
+        # answer
+        challenge = str(uuid.uuid4())
+        cypher_text = self.session_key.encrypt(challenge)
 
-            # answer
-            challenge = str(uuid.uuid4())
-            cypher_text = self.session_key.encrypt(challenge)
+        if not data:
+            print "no data!"
+            return
 
-            if not data:
-                break
-
-            conn.send(cypher_text)
-            data = self.session_key.decrypt(conn.recv(1024))
-            if data == hashlib.sha1(challenge+self.username).digest():
-                temp_pwd = self.session_key.decrypt(conn.recv(1024))
-                temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-                #TODO add database parts here
-                conn.send(self.session_key.encrypt(temp_rand))
-
-                print("fuck")
-            else:
-                conn.send(self.session_key.encrypt("__ERROR"))
+        conn.send(cypher_text)
+        data = self.session_key.decrypt(conn.recv(1024))
+        if data == hashlib.sha1(challenge+self.username).digest():
+            temp_pwd = self.session_key.decrypt(conn.recv(1024))
+            temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
+            #TODO add database parts here
+            conn.send(self.session_key.encrypt(temp_rand))
+        else:
+            conn.send(self.session_key.encrypt("__ERROR"))
         #came out of loop
         conn.close()
 
@@ -89,7 +87,7 @@ class Server:
 
             #start new thread takes 1st argument as a function name to be run,
             # second is the tuple of arguments to the function.
-            server_instance = ServerInstance()
+            server_instance = ServerInstance(self)
             start_new_thread(server_instance.client_thread, (conn,))
 
         ServerInstance.socket.close()

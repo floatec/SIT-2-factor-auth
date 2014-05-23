@@ -4,6 +4,7 @@ __author__ = 'floatec'
 from Crypto.PublicKey import RSA
 import socket
 import sys  # for exit
+import time
 import hashlib
 import AESCipher
 
@@ -20,7 +21,6 @@ class Client:
         try:
             with open('id_rsa.pub', 'r') as key_file:
                 self.server_key = RSA.importKey(key_file.read())
-                print self.server_key.exportKey()
         except IOError:
             print 'Unable to open key file!'
 
@@ -44,12 +44,12 @@ class Client:
     def login(self, username, password):
         session_key_value = hashlib.sha256(str(uuid.uuid4())).digest()
         self.session_key = AESCipher.AESCipher(session_key_value)
-
         try:
             #Set the whole string
             session_key_crypt = self.server_key.encrypt(session_key_value, "hallo")
             self.socket.sendall(session_key_crypt[0])
             self.socket.sendall(self.session_key.encrypt(username))
+            time.sleep(1)  # TODO: this is a nasty hack for sending username and password separately! Find a clean way..
             self.socket.sendall(self.session_key.encrypt(password))
         except socket.error:
             print 'Send failed'
@@ -57,10 +57,10 @@ class Client:
 
         #Now receive data
         cipher = self.socket.recv(4096)
-        print(cipher)
+        print cipher + "\n"
         reply = self.session_key.decrypt(cipher)
 
-        print reply
+        print reply + "\n"
 
         challenge = hashlib.sha1(reply + username).digest()
         self.socket.sendall(self.session_key.encrypt(challenge))
@@ -68,7 +68,7 @@ class Client:
 
 
         temp_rand = self.session_key.decrypt(self.socket.recv(4096))
-        print "\n"+temp_rand
+        print "\n" + temp_rand
 
 client = Client()
 client.open_socket()
