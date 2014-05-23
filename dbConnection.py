@@ -18,3 +18,7 @@ def Validate(username,hash):
         return True
     else:
         return False
+
+def IsValid(username,hash):
+    isValid = cur.execute("SELECT valid FROM Session WHERE Username='"+username+"'AND hash='"+hash+"';")
+    return isValid
