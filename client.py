@@ -1,81 +1,75 @@
 __author__ = 'floatec'
 #Socket client example in python
 
-from Crypto import Random
 from Crypto.PublicKey import RSA
-import socket  # for sockets
+import socket
 import sys  # for exit
 import hashlib
-import base64
 import AESCipher
 
 import uuid
 
-host = 'localhost'
-port = 8888
-user = 'test'
-pwd = '1234'
-temp_pwd = 'temp1234'
-import rsa
 
-try:
-    with open('id_rsa.pub', 'r') as key_file:
-        keyString = key_file.read()
-        server_key = RSA.importKey(keyString)
-except IOError:
-    print 'Unable to open key file!'
+class Client:
+    def __init__(self):
+        self.host = 'localhost'
+        self.port = 8888
+        self.temp_pwd = 'temp1234'
+        self.session_key = ''
 
+        try:
+            with open('id_rsa.pub', 'r') as key_file:
+                self.server_key = RSA.importKey(key_file.read())
+                print self.server_key.exportKey()
+        except IOError:
+            print 'Unable to open key file!'
 
-#create an INET, STREAMing socket
-try:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-except socket.error:
-    print 'Failed to create socket'
-    sys.exit()
+        #create an INET, STREAMing socket
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except socket.error:
+            print 'Failed to create socket'
+            sys.exit()
 
+    def open_socket(self):
+        try:
+            remote_ip = socket.gethostbyname(self.host)
+            #Connect to remote server
+            self.socket.connect((remote_ip, self.port))
+        except socket.gaierror:
+            #could not resolve
+            print 'Hostname could not be resolved. Exiting'
+            sys.exit()
 
+    def login(self, username, password):
+        session_key_value = hashlib.sha256(str(uuid.uuid4())).digest()
+        self.session_key = AESCipher.AESCipher(session_key_value)
 
+        try:
+            #Set the whole string
+            session_key_crypt = self.server_key.encrypt(session_key_value, "hallo")
+            self.socket.sendall(session_key_crypt[0])
+            self.socket.sendall(self.session_key.encrypt(username))
+            self.socket.sendall(self.session_key.encrypt(password))
+        except socket.error:
+            print 'Send failed'
+            sys.exit()
 
+        #Now receive data
+        cipher = self.socket.recv(4096)
+        print(cipher)
+        reply = self.session_key.decrypt(cipher)
 
-try:
-    remote_ip = socket.gethostbyname(host)
+        print reply
 
-except socket.gaierror:
-    #could not resolve
-    print 'Hostname could not be resolved. Exiting'
-    sys.exit()
-
-key = hashlib.sha256(str(uuid.uuid4())).digest()
-aes=AESCipher.AESCipher(key)
-
-#Connect to remote server
-s.connect((remote_ip, port))
-
-
-
-
-try :
-    #Set the whole string
-    s.sendall(key)
-    s.sendall(aes.encrypt(user))
-    s.sendall(aes.encrypt(pwd))
-except socket.error:
-    #Send failed
-    print 'Send failed'
-    sys.exit()
-
-
-#Now receive data
-cipher = s.recv(4096)
-print(cipher)
-reply = aes.decrypt(cipher)
-
-print reply
-
-chalange = hashlib.sha1(reply+user).digest()
-s.sendall(aes.encrypt(chalange))
-s.sendall(aes.encrypt(temp_pwd))
+        challenge = hashlib.sha1(reply + username).digest()
+        self.socket.sendall(self.session_key.encrypt(challenge))
+        self.socket.sendall(self.session_key.encrypt(self.temp_pwd))
 
 
-temp_rand = aes.decrypt(s.recv(4096))
-print "\n"+temp_rand
+        temp_rand = self.session_key.decrypt(self.socket.recv(4096))
+        print "\n"+temp_rand
+
+client = Client()
+client.open_socket()
+client.login('test', '1234')
