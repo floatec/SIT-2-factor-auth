@@ -2,7 +2,6 @@ __author__ = 'floatec'
 import socket
 import sys
 from thread import *
-import base64
 import AESCipher
 
 HOST = ''   # Symbolic name meaning all available interfaces

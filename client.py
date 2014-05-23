@@ -8,7 +8,6 @@ import hashlib
 import base64
 import AESCipher
 
-
 #create an INET, STREAMing socket
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,7 +28,7 @@ except socket.gaierror:
     print 'Hostname could not be resolved. Exiting'
     sys.exit()
 key = hashlib.sha256("notsosecure").digest()
-aes=AESCipher.AESCipher(key)
+aes = AESCipher.AESCipher(key)
 #Connect to remote server
 s.connect((remote_ip, port))
 
