@@ -18,35 +18,29 @@ class ServerInstance:
 
     #Function for handling connections. This will be used to create threads
     def client_thread(self, conn):
-        #Sending message to connected client
-        #conn.send('Welcome to the server. Type something and hit enter\n')  # send only takes string
-
-        #infinite loop so that function do not terminate and thread do not end.
-
-
-        #Receiving from client
+        #Receive authentication from client: a new session key, the username and password
         data = server.private.decrypt(conn.recv(2048))
         self.session_key = AESCipher.AESCipher(data)
         self.username = self.session_key.decrypt(conn.recv(1024))
         self.pwd = self.session_key.decrypt(conn.recv(1024))
-        # answer
+        # TODO: check username + password against database
+
+        # answer with a challenge to prevent replay attacks
         challenge = str(uuid.uuid4())
         cypher_text = self.session_key.encrypt(challenge)
 
-        if not data:
-            print "no data!"
-            return
-
         conn.send(cypher_text)
+        # check if user beat the challenge
         data = self.session_key.decrypt(conn.recv(1024))
         if data == hashlib.sha1(challenge+self.username).digest():
-            temp_pwd = self.session_key.decrypt(conn.recv(1024))
+            # user beat challenge. Seems to be no attack... So create random number for second factor
+            temp_pwd = self.session_key.decrypt(conn.recv(1024))  # accept temporary password for entering second factor
             temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-            #TODO add database parts here
+            # TODO add temp_rand#temp_pwd and a timestamp to database
             conn.send(self.session_key.encrypt(temp_rand))
         else:
             conn.send(self.session_key.encrypt("__ERROR"))
-        #came out of loop
+
         conn.close()
 
 

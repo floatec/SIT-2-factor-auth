@@ -45,7 +45,7 @@ class Client:
         session_key_value = hashlib.sha256(str(uuid.uuid4())).digest()
         self.session_key = AESCipher.AESCipher(session_key_value)
         try:
-            #Set the whole string
+            #Send new session key and login data (first factor)
             session_key_crypt = self.server_key.encrypt(session_key_value, "hallo")
             self.socket.sendall(session_key_crypt[0])
             self.socket.sendall(self.session_key.encrypt(username))
@@ -55,7 +55,7 @@ class Client:
             print 'Send failed'
             sys.exit()
 
-        #Now receive data
+        # now receive challenge data that prevents replay attacks
         cipher = self.socket.recv(4096)
         print cipher + "\n"
         reply = self.session_key.decrypt(cipher)
@@ -66,9 +66,9 @@ class Client:
         self.socket.sendall(self.session_key.encrypt(challenge))
         self.socket.sendall(self.session_key.encrypt(self.temp_pwd))
 
-
-        temp_rand = self.session_key.decrypt(self.socket.recv(4096))
-        print "\n" + temp_rand
+        # if challenge is beat, receive the second factor. Otherwise an error reply is received
+        msg = self.session_key.decrypt(self.socket.recv(4096))
+        print "\n" + msg
 
 client = Client()
 client.open_socket()
