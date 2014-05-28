@@ -45,6 +45,7 @@ class ServerInstance:
             conn.send(self.session_key.encrypt(temp_rand))
             ttl = self.TTL
             while ttl>0:
+                ttl=ttl-1
                 sleep(1)
                 if db.is_valid(self.username,temp_hash):
                     conn.send(self.session_key.encrypt(temp_rand))
