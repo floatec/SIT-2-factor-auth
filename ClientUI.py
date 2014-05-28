@@ -67,7 +67,7 @@ class ClientUI:
         self.secondPWEntry = Entry(self.fenster, width="70", show='*')
         self.secondPWEntry.grid(row=1, column=1)
         self.anzeigeAktualisieren(False, True, False)
-        self.buttonLogin = Button(self.fenster, text='Send', command=self.sendTmpPasswd)
+        self.buttonLogin = Button(self.fenster, text='Send', command=self.send_tmp_pwd)
         self.buttonLogin.grid(row=2, column=1, sticky=W, pady=1)
         self.userlabel.destroy()
         self.user.destroy()
@@ -75,12 +75,11 @@ class ClientUI:
         self.pwdlabel.destroy()
 
 
-    def sendTmpPasswd(self):
-        tmpPasswd = self.secondPWEntry.get()
-        success = self.client.sendTmpPasswd(tmpPasswd)
+    def send_tmp_pwd(self):
+        tmp_pwd = self.secondPWEntry.get()
+        success = self.client.send_tmp_pwd(tmp_pwd)
         if not success:
             return
-        self.anzeigeAktualisieren(False, False, True)
 
 
     def anzeigeAktualisieren(self,lampeRot, lampeGelb, lampeGruen):
