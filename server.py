@@ -1,4 +1,4 @@
-from findertools import sleep
+
 
 __author__ = 'floatec'
 import socket
@@ -9,7 +9,7 @@ import uuid
 import hashlib
 from Crypto.PublicKey import RSA
 import dbConnection as db
-
+import time
 
 class ServerInstance:
 
@@ -46,7 +46,7 @@ class ServerInstance:
             ttl = self.TTL
             while ttl>0:
                 ttl=ttl-1
-                sleep(1)
+                time.sleep(1)
                 if db.is_valid(self.username,temp_hash):
                     conn.send(self.session_key.encrypt(temp_rand))
 
