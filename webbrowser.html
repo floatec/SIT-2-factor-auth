@@ -13,15 +13,15 @@
             var hash = CryptoJS.SHA1($(#pwd).text+$(#authentificationNumber).text);
  $.ajax({
   //The URL to process the request
-    'url' : 'page.php',
+    'url' : 'webserver.py',
   //The type of request, also known as the "method" in HTML forms
   //Can be 'GET' or 'POST'
     'type' : 'GET',
   //Any post-data/get-data parameters
   //This is optional
     'data' : {
-      'paramater1' : 'username',
-      'parameter2' : 'hash'
+      'name' : username,
+      'hash' : hash
     },
   //The response from the server
     'success' : function(data) {

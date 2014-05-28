@@ -39,7 +39,7 @@ class ServerInstance:
             # user beat challenge. Seems to be no attack... So create random number for second factor
             temp_pwd = self.session_key.decrypt(conn.recv(1024))  # accept temporary password for entering second factor
             temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-            temp_hash = hashlib.sha256(temp_pwd + temp_rand)
+            temp_hash = hashlib.sha1(temp_pwd + temp_rand)
             #db.insert_session(self.username, temp_hash)
             conn.send(self.session_key.encrypt(temp_rand))
             ttl = self.TTL
