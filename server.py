@@ -6,6 +6,8 @@ import AESCipher
 import uuid
 import hashlib
 from Crypto.PublicKey import RSA
+#import dbConnection as db
+import time
 
 
 class ServerInstance:
@@ -15,11 +17,12 @@ class ServerInstance:
         self.pwd = ""
         self.session_key = ""
         self.server = server
+        self.TTL = 30
 
     #Function for handling connections. This will be used to create threads
     def client_thread(self, conn):
         #Receive authentication from client: a new session key, the username and password
-        data = server.private.decrypt(conn.recv(2048))
+        data = self.server.private.decrypt(conn.recv(2048))
         self.session_key = AESCipher.AESCipher(data)
         self.username = self.session_key.decrypt(conn.recv(1024))
         self.pwd = self.session_key.decrypt(conn.recv(1024))
@@ -36,15 +39,26 @@ class ServerInstance:
             # user beat challenge. Seems to be no attack... So create random number for second factor
             temp_pwd = self.session_key.decrypt(conn.recv(1024))  # accept temporary password for entering second factor
             temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-            # TODO add temp_rand#temp_pwd and a timestamp to database
+            temp_hash = hashlib.sha256(temp_pwd + temp_rand)
+            #db.insert_session(self.username, temp_hash)
             conn.send(self.session_key.encrypt(temp_rand))
+            ttl = self.TTL
+            while ttl > 0:
+                ttl -= 1
+                time.sleep(1)
+                if True:  # db.is_valid(self.username,temp_hash):
+                    conn.send(self.session_key.encrypt(temp_rand))
+
+            conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
         else:
-            conn.send(self.session_key.encrypt("__ERROR"))
+            conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
 
         conn.close()
 
 
 class Server:
+    BAD_REQUEST = 'Bad Request'
+
     def __init__(self):
         try:
             with open('id_rsa', 'r') as key_file:
@@ -85,7 +99,3 @@ class Server:
             start_new_thread(server_instance.client_thread, (conn,))
 
         ServerInstance.socket.close()
-
-server = Server()
-server.open_socket()
-server.handle_clients()

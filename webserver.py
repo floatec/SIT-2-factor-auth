@@ -2,10 +2,17 @@ import string,cgi,time
 from os import curdir, sep
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 #import pro
+import urlparse
+import dbConnection as db
 
 class MyHandler(BaseHTTPRequestHandler):
 
     def do_Get(self):
+
+        o = urlparse.urlparse(self.path)
+        param = urlparse.parse_qs(o.query)
+        if 'hash' in param.keys():
+            db.validate(param['user'], param['hash'])
         try:
             if self.path.endswitch(".html"):
                 f = open(curdir + sep + self.path)

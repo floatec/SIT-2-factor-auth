@@ -6,7 +6,8 @@ import thread
 
 class ClientUI:
 
-    def __init__(self):
+    def __init__(self, client):
+        self.client = client
         self.ampel = Ampel('rot')
         self.fenster = Tk()
         self.fenster.geometry("600x200")
@@ -15,12 +16,12 @@ class ClientUI:
         self.userlabel.grid(row=0)
         self.user = Entry(self.fenster, width=70)
         self.user.grid(row=0, column=1)
-
+        self.etext = ''
 
 
         self.pwdlabel = Label(self.fenster, text="Password")
         self.pwdlabel.grid(row=1)
-        self.pwd = Entry(self.fenster, width=70)
+        self.pwd = Entry(self.fenster, width=70, show='*')
         self.pwd.grid(row=1, column=1)
         # Rahmen
         self.frameAmpel = Frame(master=self.fenster, background='darkgray')
@@ -47,32 +48,41 @@ class ClientUI:
 
 
     def Next(self):
-        #TODO:Abfrage ob man auf Schritt 2 zugreifen darf
-        Label(self.fenster, text="Code").grid(row=0)
+        username = self.user.get()
+        password = self.pwd.get()
+        msg = self.client.login(username, password)
+        if not msg:
+            return
+
+        Label(self.fenster, text=msg).grid(row=0)
         self.buttonNext.destroy()
 
 
-        eText = StringVar()
-        self.code=Entry(self.fenster, state="readonly", textvariable=eText, width="70")
+        self.etext = StringVar()
+        self.code=Entry(self.fenster, state="readonly", textvariable=self.etext, width="70")
         self.code.grid(row=0, column=1)
-        eText.set("...waiting for second password...")
+        self.etext.set("...waiting for second password...")
         self.secondPW = Label(self.fenster, text="2. Password")
         self.secondPW.grid(row=1)
-        self.secondPWEntry = Entry(self.fenster, width="70")
+        self.secondPWEntry = Entry(self.fenster, width="70", show='*')
         self.secondPWEntry.grid(row=1, column=1)
         self.anzeigeAktualisieren(False, True, False)
-        self.buttonLogin = Button(self.fenster, text='Send', command=self.Login)
+        self.buttonLogin = Button(self.fenster, text='Send', command=self.send_tmp_pwd)
         self.buttonLogin.grid(row=2, column=1, sticky=W, pady=1)
         self.userlabel.destroy()
         self.user.destroy()
         self.pwd.destroy()
         self.pwdlabel.destroy()
 
-
-    def Login(self):
-        #TODO:Abfrage, ob man eingeloggt ist
-        self.anzeigeAktualisieren(False,False,True)
-
+    def send_tmp_pwd(self):
+        tmp_pwd = self.secondPWEntry.get()
+        success = self.client.send_tmp_pwd(tmp_pwd)
+        if not success:
+            return
+        self.etext.set("Please enter the code on the left in your web browser.")
+        self.buttonLogin.destroy()
+        self.secondPWEntry.destroy()
+        self.secondPW.destroy()
 
     def anzeigeAktualisieren(self,lampeRot, lampeGelb, lampeGruen):
         if lampeRot:
@@ -87,5 +97,3 @@ class ClientUI:
             self.labelGruen.config(background='green')
         else:
             self.labelGruen.config(background='gray')
-
-clientUI = ClientUI()
