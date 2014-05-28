@@ -16,7 +16,7 @@ class ClientUI:
         self.userlabel.grid(row=0)
         self.user = Entry(self.fenster, width=70)
         self.user.grid(row=0, column=1)
-
+        self.etext = ''
 
 
         self.pwdlabel = Label(self.fenster, text="Password")
@@ -58,10 +58,10 @@ class ClientUI:
         self.buttonNext.destroy()
 
 
-        eText = StringVar()
-        self.code=Entry(self.fenster, state="readonly", textvariable=eText, width="70")
+        self.etext = StringVar()
+        self.code=Entry(self.fenster, state="readonly", textvariable=self.etext, width="70")
         self.code.grid(row=0, column=1)
-        eText.set("...waiting for second password...")
+        self.etext.set("...waiting for second password...")
         self.secondPW = Label(self.fenster, text="2. Password")
         self.secondPW.grid(row=1)
         self.secondPWEntry = Entry(self.fenster, width="70", show='*')
@@ -74,13 +74,15 @@ class ClientUI:
         self.pwd.destroy()
         self.pwdlabel.destroy()
 
-
     def send_tmp_pwd(self):
         tmp_pwd = self.secondPWEntry.get()
         success = self.client.send_tmp_pwd(tmp_pwd)
         if not success:
             return
-
+        self.etext.set("Please enter the code on the left in your web browser.")
+        self.buttonLogin.destroy()
+        self.secondPWEntry.destroy()
+        self.secondPW.destroy()
 
     def anzeigeAktualisieren(self,lampeRot, lampeGelb, lampeGruen):
         if lampeRot:

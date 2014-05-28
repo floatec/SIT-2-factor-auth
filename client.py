@@ -77,3 +77,8 @@ class Client:
 
     def send_tmp_pwd(self, tmp_pwd):
         self.socket.sendall(self.session_key.encrypt(tmp_pwd))
+
+        msg = self.session_key.decrypt(self.socket.recv(4096))
+        if msg == Server.BAD_REQUEST:
+            return False
+        return True

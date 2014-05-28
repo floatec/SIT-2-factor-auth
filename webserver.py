@@ -12,7 +12,7 @@ class MyHandler(BaseHTTPRequestHandler):
         o = urlparse.urlparse(self.path)
         param = urlparse.parse_qs(o.query)
         if 'hash' in param.keys():
-            db.validate(param['user'],param['hash'])
+            db.validate(param['user'], param['hash'])
         try:
             if self.path.endswitch(".html"):
                 f = open(curdir + sep + self.path)
