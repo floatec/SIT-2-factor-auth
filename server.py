@@ -1,3 +1,5 @@
+from findertools import sleep
+
 __author__ = 'floatec'
 import socket
 import sys
@@ -6,6 +8,7 @@ import AESCipher
 import uuid
 import hashlib
 from Crypto.PublicKey import RSA
+import dbConnection as db
 
 
 class ServerInstance:
@@ -15,6 +18,7 @@ class ServerInstance:
         self.pwd = ""
         self.session_key = ""
         self.server = server
+        self.TTL = 30
 
     #Function for handling connections. This will be used to create threads
     def client_thread(self, conn):
@@ -36,8 +40,16 @@ class ServerInstance:
             # user beat challenge. Seems to be no attack... So create random number for second factor
             temp_pwd = self.session_key.decrypt(conn.recv(1024))  # accept temporary password for entering second factor
             temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-            # TODO add temp_rand#temp_pwd and a timestamp to database
+            temp_hash=hashlib.sha256(temp_pwd+temp_rand)
+            db.insert_session(self.username,temp_hash)
             conn.send(self.session_key.encrypt(temp_rand))
+            ttl = self.TTL
+            while ttl>0:
+                sleep(1)
+                if db.is_valid(self.username,temp_hash):
+                    conn.send(self.session_key.encrypt(temp_rand))
+
+            conn.send(self.session_key.encrypt("__ERROR"))
         else:
             conn.send(self.session_key.encrypt("__ERROR"))
 
