@@ -7,7 +7,7 @@ import sys  # for exit
 import time
 import hashlib
 import AESCipher
-
+from server import Server
 import uuid
 
 
@@ -16,7 +16,7 @@ class Client:
         self.host = 'localhost'
         self.port = 8888
         self.temp_pwd = 'temp1234'
-        self.session_key = ''
+        self.session_key = None
 
         try:
             with open('id_rsa.pub', 'r') as key_file:
@@ -51,14 +51,17 @@ class Client:
             self.socket.sendall(self.session_key.encrypt(username))
             time.sleep(1)  # TODO: this is a nasty hack for sending username and password separately! Find a clean way..
             self.socket.sendall(self.session_key.encrypt(password))
-        except socket.error:
-            print 'Send failed'
+        except socket.error, msg:
+            print 'Sending authentication failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
             sys.exit()
 
         # now receive challenge data that prevents replay attacks
-        cipher = self.socket.recv(4096)
-        print cipher + "\n"
-        reply = self.session_key.decrypt(cipher)
+        response = self.socket.recv(4096)
+        print response + "\n"
+        if response == Server.BAD_REQUEST:
+            return False
+
+        reply = self.session_key.decrypt(response)
 
         print reply + "\n"
 
@@ -68,8 +71,9 @@ class Client:
 
         # if challenge is beat, receive the second factor. Otherwise an error reply is received
         msg = self.session_key.decrypt(self.socket.recv(4096))
-        print "\n" + msg
+        if msg == Server.BAD_REQUEST:
+            return False
+        return msg
 
-client = Client()
-client.open_socket()
-client.login('test', '1234')
+    def send_tmp_pwd(self, tmp_pwd):
+        self.socket.sendall(self.session_key.encrypt(tmp_pwd))
