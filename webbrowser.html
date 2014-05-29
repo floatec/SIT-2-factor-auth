@@ -9,28 +9,28 @@
     <script type="text/javascript">
         sendCrud()
         {
-            var username = $(#usrName).text;
+            var username = $(#userName).text;
             var hash = CryptoJS.SHA1($(#pwd).text+$(#authentificationNumber).text);
- $.ajax({
-  //The URL to process the request
-    'url' : 'webserver.py',
-  //The type of request, also known as the "method" in HTML forms
-  //Can be 'GET' or 'POST'
-    'type' : 'GET',
-  //Any post-data/get-data parameters
-  //This is optional
-    'data' : {
-      'name' : username,
-      'hash' : hash
-    },
-  //The response from the server
-    'success' : function(data) {
-    //You can use any jQuery/JavaScript here!!!
-      if (data == "success") {
-        alert('request sent!');
-      }
-    }
-  });
+            $.ajax({
+                //The URL to process the request
+                'url' : 'webserver.py',
+                //The type of request, also known as the "method" in HTML forms
+                //Can be 'GET' or 'POST'
+                'type' : 'GET',
+                //Any post-data/get-data parameters
+                //This is optional
+                'data' : {
+                  'name' : username,
+                  'hash' : hash
+                },
+                //The response from the server
+                'success' : function(data) {
+                //You can use any jQuery/JavaScript here!!!
+                  if (data == "success") {
+                    alert('request sent!');
+                  }
+                }
+            });
 
         }
 
@@ -41,9 +41,9 @@
 
 <body>
 
-<input type="text" id="usrName" placeholder="Username">
-<input type="password" id="pwd" placeholder="Password">
-<input type="text" id="authentificationNumber" placeholder="authentification Number">
+<input type="text" id="userName" placeholder="Username">
+<input type="password" id="pwd" placeholder="Temporary password">
+<input type="text" id="authentificationNumber" placeholder="Authentification Number">
 <input type="button" id="send" value="send" onclick="sendCrud()">
 
 </body>

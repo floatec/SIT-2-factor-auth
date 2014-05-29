@@ -5,10 +5,9 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import urlparse
 import dbConnection as db
 
+
 class MyHandler(BaseHTTPRequestHandler):
-
-    def do_Get(self):
-
+    def do_get(self):
         o = urlparse.urlparse(self.path)
         param = urlparse.parse_qs(o.query)
         if 'hash' in param.keys():
@@ -18,22 +17,22 @@ class MyHandler(BaseHTTPRequestHandler):
                 f = open(curdir + sep + self.path)
 
                 self.send_response(200)
-                self.send_header(('Content-type'), 'text/html')
+                self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write(f.read())
                 f.close()
                 return
             return
         except IOError:
-            self.send_error(404,'File Not Found: %s' % self.path)
+            self.send_error(404, 'File Not Found: %s' % self.path)
 
-    def do_Post(self):
+    def do_post(self):
         pass
 
 
 def main():
     try:
-        server = HTTPServer(('',80),MyHandler)
+        server = HTTPServer(('', 80), MyHandler)
         print 'started httpserver... hell Yeah!'
         server.serve_forever()
     except KeyboardInterrupt:

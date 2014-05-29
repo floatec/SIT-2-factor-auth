@@ -8,7 +8,11 @@ cur = db.cursor()
 
 def get_user_pw(username):
     cur.execute("SELECT password FROM user WHERE Username =%s;", (username,))
-    return cur.fetchone()
+    result = cur.fetchone()
+    if result is not None:
+        return result[0]
+    else:
+        return None
 
 
 def insert_session(username, hash_val):

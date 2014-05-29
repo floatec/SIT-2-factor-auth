@@ -6,7 +6,7 @@ import AESCipher
 import uuid
 import hashlib
 from Crypto.PublicKey import RSA
-#import dbConnection as db
+import dbConnection as db
 import time
 
 
@@ -17,7 +17,7 @@ class ServerInstance:
         self.pwd = ""
         self.session_key = ""
         self.server = server
-        self.TTL = 30
+        self.ttl = 30
 
     #Function for handling connections. This will be used to create threads
     def client_thread(self, conn):
@@ -26,32 +26,35 @@ class ServerInstance:
         self.session_key = AESCipher.AESCipher(data)
         self.username = self.session_key.decrypt(conn.recv(1024))
         self.pwd = self.session_key.decrypt(conn.recv(1024))
-        # TODO: check username + password against database
-
-        # answer with a challenge to prevent replay attacks
-        challenge = str(uuid.uuid4())
-        cypher_text = self.session_key.encrypt(challenge)
-
-        conn.send(cypher_text)
-        # check if user beat the challenge
-        data = self.session_key.decrypt(conn.recv(1024))
-        if data == hashlib.sha1(challenge+self.username).digest():
-            # user beat challenge. Seems to be no attack... So create random number for second factor
-            temp_pwd = self.session_key.decrypt(conn.recv(1024))  # accept temporary password for entering second factor
-            temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-            temp_hash = hashlib.sha1(temp_pwd + temp_rand)
-            #db.insert_session(self.username, temp_hash)
-            conn.send(self.session_key.encrypt(temp_rand))
-            ttl = self.TTL
-            while ttl > 0:
-                ttl -= 1
-                time.sleep(1)
-                if True:  # db.is_valid(self.username,temp_hash):
-                    conn.send(self.session_key.encrypt(temp_rand))
-
+        db_return = db.get_user_pw(self.username)
+        if db_return != hashlib.sha1(self.pwd).hexdigest():
             conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
         else:
-            conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
+            print "password accepted!"
+            # answer with a challenge to prevent replay attacks
+            challenge = str(uuid.uuid4())
+            cypher_text = self.session_key.encrypt(challenge)
+
+            conn.send(cypher_text)
+            # check if user beat the challenge
+            data = self.session_key.decrypt(conn.recv(1024))
+            if data == hashlib.sha1(challenge+self.username).digest():
+                # user beat challenge. Seems to be no attack... So create random number for second factor
+                temp_pwd = self.session_key.decrypt(conn.recv(1024))  # accept temporary password for entering second factor
+                temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
+                temp_hash = hashlib.sha256(temp_pwd + temp_rand)
+                db.insert_session(self.username, temp_hash)
+                conn.send(self.session_key.encrypt(temp_rand))
+                ttl = self.ttl
+                while ttl > 0:
+                    ttl -= 1
+                    time.sleep(1)
+                    if db.is_valid(self.username, temp_hash):
+                        conn.send(self.session_key.encrypt(temp_rand))
+
+                conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
+            else:
+                conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
 
         conn.close()
 
