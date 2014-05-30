@@ -1,7 +1,7 @@
 __author__ = 'Tieni'
 
 from client import Client
-from ClientUI import ClientUI
+from client_ui import ClientUI
 
 client = Client()
 client.open_socket()

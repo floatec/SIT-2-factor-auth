@@ -56,12 +56,11 @@ class Client:
             sys.exit()
 
         # now receive challenge data that prevents replay attacks
-        response = self.socket.recv(4096)
-        print response + "\n"
+        response = self.session_key.decrypt(self.socket.recv(4096))
         if response == Server.BAD_REQUEST:
             return False
 
-        reply = self.session_key.decrypt(response)
+        reply = response
 
         print reply + "\n"
 

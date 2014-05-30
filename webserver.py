@@ -5,15 +5,16 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import urlparse
 #import dbConnection as db
 
+
+
 class MyHandler(BaseHTTPRequestHandler):
-
     def do_GET(self):
-
         o = urlparse.urlparse(self.path)
         param = urlparse.parse_qs(o.query)
         #if 'hash' in param.keys():
         #    db.validate(param['user'], param['hash'])
         try:
+
 
             f = open('webbrowser.html')
 
@@ -24,15 +25,16 @@ class MyHandler(BaseHTTPRequestHandler):
             f.close()
             return
         except IOError:
-            self.send_error(404,'File Not Found: %s' % self.path)
+            self.send_error(404, 'File Not Found: %s' % self.path)
 
-    def do_Post(self):
+    def do_POST(self):
         pass
 
 
 def main():
     try:
         server = HTTPServer(('',8080),MyHandler)
+
         print 'started httpserver... hell Yeah!'
         server.serve_forever()
     except KeyboardInterrupt:
