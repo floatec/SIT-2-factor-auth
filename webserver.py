@@ -3,26 +3,25 @@ from os import curdir, sep
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 #import pro
 import urlparse
-import dbConnection as db
+#import dbConnection as db
 
 class MyHandler(BaseHTTPRequestHandler):
 
-    def do_Get(self):
+    def do_GET(self):
 
         o = urlparse.urlparse(self.path)
         param = urlparse.parse_qs(o.query)
-        if 'hash' in param.keys():
-            db.validate(param['user'], param['hash'])
+        #if 'hash' in param.keys():
+        #    db.validate(param['user'], param['hash'])
         try:
-            if self.path.endswitch(".html"):
-                f = open(curdir + sep + self.path)
 
-                self.send_response(200)
-                self.send_header(('Content-type'), 'text/html')
-                self.end_headers()
-                self.wfile.write(f.read())
-                f.close()
-                return
+            f = open('webbrowser.html')
+
+            self.send_response(200)
+            self.send_header(('Content-type'), 'text/html')
+            self.end_headers()
+            self.wfile.write(f.read())
+            f.close()
             return
         except IOError:
             self.send_error(404,'File Not Found: %s' % self.path)
@@ -33,7 +32,7 @@ class MyHandler(BaseHTTPRequestHandler):
 
 def main():
     try:
-        server = HTTPServer(('',80),MyHandler)
+        server = HTTPServer(('',8080),MyHandler)
         print 'started httpserver... hell Yeah!'
         server.serve_forever()
     except KeyboardInterrupt:
