@@ -176,8 +176,9 @@ function SHA1 (msg) {
 }
 
         function sendCrud(){
-            var username = $('#userName').text;
-            var hash = SHA1($('#pwd').text+$('#authentificationNumber').text);
+            var username = $('#userName').val();
+
+            var hash = SHA1($('#pwd').val()+$('#authentificationNumber').val());
             $.ajax({
                 //The URL to process the request
                 'url' : '/',
@@ -193,9 +194,9 @@ function SHA1 (msg) {
                 //The response from the server
                 'success' : function(data) {
                 //You can use any jQuery/JavaScript here!!!
-                  if (data == "success") {
+
                     alert('request sent!');
-                  }
+
                 }
             });
 
