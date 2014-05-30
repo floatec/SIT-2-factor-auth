@@ -15,7 +15,7 @@ class Client:
     def __init__(self):
         self.host = 'localhost'
         self.port = 8888
-        self.temp_pwd = 'temp1234'
+        self.temp_rand = ''
         self.session_key = None
 
         try:
@@ -53,7 +53,7 @@ class Client:
             self.socket.sendall(self.session_key.encrypt(password))
         except socket.error, msg:
             print 'Sending authentication failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
-            sys.exit()
+            return False
 
         # now receive challenge data that prevents replay attacks
         response = self.session_key.decrypt(self.socket.recv(4096))
@@ -66,18 +66,23 @@ class Client:
 
         challenge = hashlib.sha1(reply + username).digest()
         self.socket.sendall(self.session_key.encrypt(challenge))
-        self.socket.sendall(self.session_key.encrypt(self.temp_pwd))
-
-        # if challenge is beat, receive the second factor. Otherwise an error reply is received
         msg = self.session_key.decrypt(self.socket.recv(4096))
-        if msg == Server.BAD_REQUEST:
-            return False
-        return msg
+        if msg == 'OK':
+            return True
+        return False
 
     def send_tmp_pwd(self, tmp_pwd):
         self.socket.sendall(self.session_key.encrypt(tmp_pwd))
-
         msg = self.session_key.decrypt(self.socket.recv(4096))
+        print "after send tmp " + msg
         if msg == Server.BAD_REQUEST:
             return False
-        return True
+        self.temp_rand = msg
+        return msg
+
+    def wait_for_authentication(self):
+        msg = self.session_key.decrypt(self.socket.recv(4096))
+        print "FINAL RESPONSE: " + msg
+        if msg == 'OK'+self.temp_rand:
+            return True
+        return False

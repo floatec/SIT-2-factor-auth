@@ -17,7 +17,7 @@ class ServerInstance:
         self.pwd = ""
         self.session_key = ""
         self.server = server
-        self.ttl = 30
+        self.ttl = 1000
 
     #Function for handling connections. This will be used to create threads
     def client_thread(self, conn):
@@ -39,18 +39,22 @@ class ServerInstance:
             # check if user beat the challenge
             data = self.session_key.decrypt(conn.recv(1024))
             if data == hashlib.sha1(challenge+self.username).digest():
+                conn.sendall(self.session_key.encrypt("OK"))
                 # user beat challenge. Seems to be no attack... So create random number for second factor
                 temp_pwd = self.session_key.decrypt(conn.recv(1024))  # accept temporary password for entering second factor
+                print "temp pwd: " + temp_pwd
                 temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-                temp_hash = hashlib.sha256(temp_pwd + temp_rand)
+                conn.sendall(self.session_key.encrypt(temp_rand))
+                temp_hash = hashlib.sha1(temp_pwd + temp_rand).hexdigest()
+                print "tehmp hash: " + temp_hash
                 db.insert_session(self.username, temp_hash)
-                conn.send(self.session_key.encrypt(temp_rand))
                 ttl = self.ttl
                 while ttl > 0:
                     ttl -= 1
                     time.sleep(1)
                     if db.is_valid(self.username, temp_hash):
-                        conn.send(self.session_key.encrypt(temp_rand))
+                        print "I SEND: " + 'OK' + temp_rand
+                        conn.send(self.session_key.encrypt('OK' + temp_rand))
 
                 conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
             else:

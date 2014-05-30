@@ -60,12 +60,12 @@ class ClientUI:
     def next(self):
         username = self.user_entry.get()
         password = self.pwd_entry.get()
-        msg = self.client.login(username, password)
-        if not msg:
+        success = self.client.login(username, password)
+        if not success:
             self.button_next.destroy()
             self.server_response.set("Could not find user with this password. Quit and try again, please!")
+            return
 
-        self.second_factor = msg
         self.button_next.destroy()
 
         #self.response_field = Entry(self.window, state="readonly", textvariable=self.server_response, width="70")
@@ -88,13 +88,20 @@ class ClientUI:
 
     def send_2nd_pwd(self):
         tmp_pwd = self.second_pw_entry.get()
-        success = self.client.send_tmp_pwd(tmp_pwd)
-        if not success:
+        msg = self.client.send_tmp_pwd(tmp_pwd)
+        if not msg:
             return
-        self.server_response.set("Enter this code on our website using the temporary password: " + self.second_factor)
+        self.server_response.set("Enter this code on our website using the temporary password: " + msg)
+        self.response_field.update()
         self.button_send_pwd.destroy()
         self.second_pw_entry.destroy()
         self.second_pw.destroy()
+        if self.client.wait_for_authentication():
+            self.update_display(False, False, True)
+            self.server_response.set("You have authenticated yourself successfully!")
+        else:
+            self.update_display(True, False, False)
+            self.server_response.set("Authentication failed!")
 
     def update_display(self, lamp_red, lamp_yellow, lamp_green):
         if lamp_red:
