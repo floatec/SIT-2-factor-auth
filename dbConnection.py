@@ -48,6 +48,8 @@ def is_valid(username, hash_val):
     print valid
     print valid[0]
     if valid[0] == 1:
+        newcur.execute("DELETE FROM Session WHERE Username=%s AND hash=%s;", (username, hash_val))
+        db.commit()
         return True
     else:
         return False
