@@ -3,16 +3,15 @@ from os import curdir, sep
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 #import pro
 import urlparse
-#import dbConnection as db
-
+import dbConnection as db
 
 
 class MyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         o = urlparse.urlparse(self.path)
         param = urlparse.parse_qs(o.query)
-        #if 'hash' in param.keys():
-        #    db.validate(param['user'], param['hash'])
+        if 'hash' in param.keys():
+            db.validate(param['name'][0], param['hash'][0])
         try:
 
 
