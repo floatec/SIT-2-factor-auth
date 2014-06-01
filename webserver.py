@@ -1,7 +1,4 @@
-import string,cgi,time
-from os import curdir, sep
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-#import pro
 import urlparse
 import dbConnection as db
 
@@ -13,8 +10,6 @@ class MyHandler(BaseHTTPRequestHandler):
         if 'hash' in param.keys():
             db.validate(param['name'][0], param['hash'][0])
         try:
-
-
             f = open('webbrowser.html')
 
             self.send_response(200)
@@ -31,9 +26,8 @@ class MyHandler(BaseHTTPRequestHandler):
 
 
 def main():
+    server = HTTPServer(('',8080),MyHandler)
     try:
-        server = HTTPServer(('',8080),MyHandler)
-
         print 'started httpserver... hell Yeah!'
         server.serve_forever()
     except KeyboardInterrupt:
