@@ -25,6 +25,8 @@ def insert_session(username, hash_val):
 def validate(username, hash_val):
     cur.execute("SELECT actualtime FROM Session WHERE Username=%s AND hash=%s;", (username, hash_val))
     db_timestamp = cur.fetchone()
+    if db_timestamp is None:
+        return False
     print db_timestamp[0]
     print time.time()
     diff = (time.time() - db_timestamp[0])
@@ -40,13 +42,13 @@ def validate(username, hash_val):
 
 
 def is_valid(username, hash_val):
-    print "username: " + username + " hash: " + hash_val
     db = MySQLdb.connect(host="localhost", user="root", passwd="mytienmagsit", db="database")
     newcur = db.cursor()
     newcur.execute("SELECT valid FROM Session WHERE Username=%s AND hash=%s;", (username, hash_val))
     valid = newcur.fetchone()
-    print valid
-    print valid[0]
+    if valid is None:
+        print "valid is none :("
+        return False
     if valid[0] == 1:
         newcur.execute("DELETE FROM Session WHERE Username=%s AND hash=%s;", (username, hash_val))
         db.commit()

@@ -68,17 +68,13 @@ class ClientUI:
 
         self.button_next.destroy()
 
-        #self.response_field = Entry(self.window, state="readonly", textvariable=self.server_response, width="70")
-        #self.response_field.grid(row=0, column=1)
         self.server_response.set("Please enter a temporary password.")
 
         self.second_pw = Label(self.window, text="2. Password")
         self.second_pw.grid(row=1)
-        #self.second_pw_entry = Entry(self.window, width="70", show='*')
         self.second_pw_entry.grid(row=1, column=1)
 
         self.update_display(False, True, False)
-        #self.button_send_pwd = Button(self.window, text='Send', command=self.send_2nd_pwd))
         self.button_send_pwd.grid(row=2, column=1, sticky=W, pady=1)
         self.button_quit.grid(row=2, column=0, sticky=W, pady=1)
         self.user_label.destroy()

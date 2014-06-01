@@ -192,15 +192,10 @@ function SHA1 (msg) {
                 },
                 //The response from the server
                 'success' : function(data) {
-                //You can use any jQuery/JavaScript here!!!
-
-                    alert('sended!');
-
+                    alert('Your authentication request was sent! Please wait until you are authenticated or rejected.');
                 },
                 'error' : function(data) {
-                //You can use any jQuery/JavaScript here!!!
-
-                    alert('failed!');
+                    alert('Authentication request rejected!');
 
                 }
             });

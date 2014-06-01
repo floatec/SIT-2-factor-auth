@@ -2,6 +2,8 @@ __author__ = 'floatec'
 #Socket client example in python
 
 from Crypto.PublicKey import RSA
+from Crypto import Random
+from Crypto.Cipher import AES
 import socket
 import sys  # for exit
 import time
@@ -43,10 +45,14 @@ class Client:
 
     def login(self, username, password):
         session_key_value = hashlib.sha256(str(uuid.uuid4())).digest()
-        self.session_key = AESCipher.AESCipher(session_key_value)
+        iv = Random.new().read(AES.block_size)
+        self.session_key = AES.new(session_key_value, AES.MODE_CFB, iv)
+
         try:
             #Send new session key and login data (first factor)
-            session_key_crypt = self.server_key.encrypt(session_key_value, "hallo")
+            key_info = session_key_value + "delim" + iv
+            print "key_info: " + key_info
+            session_key_crypt = self.server_key.encrypt(key_info, "hallo")
             self.socket.sendall(session_key_crypt[0])
             self.socket.sendall(self.session_key.encrypt(username))
             time.sleep(1)  # TODO: this is a nasty hack for sending username and password separately! Find a clean way..
