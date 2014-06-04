@@ -8,7 +8,7 @@ class MyHandler(BaseHTTPRequestHandler):
         o = urlparse.urlparse(self.path)
         param = urlparse.parse_qs(o.query)
         if 'hash' in param.keys():
-            db.validate(param['name'][0], param['hash'][0])
+            db.validate_session(param['name'][0], param['hash'][0])
         try:
             f = open('webbrowser.html')
 
@@ -26,12 +26,12 @@ class MyHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    server = HTTPServer(('',8080),MyHandler)
+    server = HTTPServer(('', 8080), MyHandler)
     try:
-        print 'started httpserver... hell Yeah!'
+        print 'Http server up and running!'
         server.serve_forever()
     except KeyboardInterrupt:
-        print '^C received, shutting down Server, Baby!'
+        print '^C received, shutting down Server!'
         server.socket.close()
 
 if __name__ == '__main__':

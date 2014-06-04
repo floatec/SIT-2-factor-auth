@@ -6,8 +6,7 @@ from thread import *
 import uuid
 import hashlib
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES
-from Crypto import Random
+from AESCipher import *
 import dbConnection as db
 import time
 
@@ -24,11 +23,11 @@ class ServerInstance:
     #Function for handling connections. This will be used to create threads
     def client_thread(self, conn):
         #Receive authentication from client: a new session key, the username and password
-        self.session_key = self.server.private.decrypt(conn.recv(2048))
+        self.session_key = AESCipher(self.server.private.decrypt(conn.recv(2048)))
 
-        user_data = self.decrypt_msg(conn.recv(1024))
+        user_data = self.session_key.decrypt(conn.recv(1024))
         user_data = user_data.split(Server.DELIMITER)
-        print user_data
+
         if len(user_data) != 2:
             print "incomplete user data!"
             conn.close()
@@ -37,52 +36,41 @@ class ServerInstance:
         self.username = user_data[0]
         self.pwd = user_data[1]
 
-        db_return = db.get_user_pw(self.username)
-        if db_return != hashlib.sha1(self.pwd).hexdigest():
-            conn.send(self.encrypt_msg(Server.BAD_REQUEST))
+        #db_return = db.get_user_pw(self.username)
+        if not db.validate_login(self.username, self.pwd):  # db_return != hashlib.sha1(self.pwd).hexdigest():
+            conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
         else:
-            print "password accepted!"
             # answer with a challenge to prevent replay attacks
             challenge = str(uuid.uuid4())
-            conn.send(self.encrypt_msg(challenge))
+            conn.send(self.session_key.encrypt(challenge))
 
             # check if user beat the challenge
-            challenge_response = self.decrypt_msg(conn.recv(1024))
+            challenge_response = self.session_key.decrypt(conn.recv(1024))
             if challenge_response == hashlib.sha1(challenge+self.username).digest():
-                conn.sendall(self.encrypt_msg("OK, I almost trust that you are " + self.username))
-                # user beat challenge. Seems to be no attack... So create random number for second factor
-                temp_pwd = self.decrypt_msg(conn.recv(1024))  # accept temporary password for entering second factor
-                print "temp pwd: " + temp_pwd
+                conn.sendall(self.session_key.encrypt("OK, I almost trust that you are " + self.username))
+                # user beat challenge. Seems to be no attack. So ...
+                # 1. accept temporary password for entering second factor
+                temp_pwd = self.session_key.decrypt(conn.recv(1024))
+                # 2. generate a second factor and send it to the user
                 temp_rand = hashlib.md5(str(uuid.uuid4())).hexdigest()[:5]
-                conn.sendall(self.encrypt_msg(temp_rand))
+                conn.sendall(self.session_key.encrypt(temp_rand))
+                # 3. create a time-limited session in the database
                 temp_hash = hashlib.sha1(temp_pwd + temp_rand).hexdigest()
-                print "temp hash: " + temp_hash
                 db.insert_session(self.username, temp_hash)
                 ttl = self.ttl
                 while ttl > 0:
                     print "ttl: " + str(ttl)
                     ttl -= 1
                     time.sleep(1)
-                    if db.is_valid(self.username, temp_hash):
-                        print "I SEND: " + 'OK' + temp_rand
-                        conn.send(self.encrypt_msg('OK' + temp_rand))
+                    if db.session_is_valid(self.username, temp_hash):
+                        conn.send(self.session_key.encrypt('OK' + temp_rand))
                         return
 
-                conn.send(self.encrypt_msg(Server.BAD_REQUEST))
+                conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
             else:
-                conn.send(self.encrypt_msg(Server.BAD_REQUEST))
+                conn.send(self.session_key.encrypt(Server.BAD_REQUEST))
 
         conn.close()
-
-    def decrypt_msg(self, msg):
-        iv = msg[0:AES.block_size]
-        key = AES.new(self.session_key, AES.MODE_CFB, iv)
-        return key.decrypt(msg[AES.block_size:])
-
-    def encrypt_msg(self, msg):
-        iv = Random.new().read(AES.block_size)
-        key = AES.new(self.session_key, AES.MODE_CFB, iv)
-        return iv+key.encrypt(msg)
 
 
 class Server:

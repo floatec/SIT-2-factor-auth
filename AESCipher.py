@@ -3,6 +3,7 @@ import base64
 from Crypto import Random
 from Crypto.Cipher import AES
 
+
 class AESCipher:
     def __init__(self, key):
         self.bs = 32
@@ -26,5 +27,6 @@ class AESCipher:
     def _pad(self, s):
         return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
 
-    def _unpad(self, s):
+    @staticmethod
+    def _unpad(s):
         return s[:-ord(s[len(s)-1:])]
