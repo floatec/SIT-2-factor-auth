@@ -43,7 +43,7 @@ class Client:
 
     def login(self, username, password):
         self.session_key = hashlib.sha256(str(uuid.uuid4())).digest()
-
+        print "AES BLOCK SIZE: " + str(AES.block_size)
         try:
             #Send new session key and login data (first factor)
             session_key_crypt = self.server_key.encrypt(self.session_key, "hallo")
@@ -63,7 +63,7 @@ class Client:
         challenge = hashlib.sha1(message + username).digest()
         self.socket.sendall(self.encrypt_msg(challenge))
         msg = self.decrypt_msg(self.socket.recv(4096))
-        if msg == 'OK':
+        if msg == 'OK, I almost trust that you are ' + username:
             return True
         return False
 

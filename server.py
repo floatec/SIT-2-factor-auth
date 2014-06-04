@@ -49,7 +49,7 @@ class ServerInstance:
             # check if user beat the challenge
             challenge_response = self.decrypt_msg(conn.recv(1024))
             if challenge_response == hashlib.sha1(challenge+self.username).digest():
-                conn.sendall(self.encrypt_msg("OK"))
+                conn.sendall(self.encrypt_msg("OK, I almost trust that you are " + self.username))
                 # user beat challenge. Seems to be no attack... So create random number for second factor
                 temp_pwd = self.decrypt_msg(conn.recv(1024))  # accept temporary password for entering second factor
                 print "temp pwd: " + temp_pwd
